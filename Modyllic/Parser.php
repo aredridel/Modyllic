@@ -1057,6 +1057,26 @@ class Modyllic_Parser {
             $this->get_reserved();
             $this->ctx->engine = $this->cur()->value(); # We want the user's capitalization
         }
+        else if ( $this->cur()->token() == 'PARTITION' ) {
+            $this->get_reserved(array( 'BY' ));
+            $part_type = $this->get_reserved(array( 'LINEAR', 'HASH', 'LIST', 'RANGE', 'KEY' ));
+
+            if ( $part_type == 'LINEAR' ) {
+                $linear = true;
+                $part_type = $this->get_reserved(array( 'LIST', 'RANGE' ));
+            }
+            else {
+                $linear = false;
+            }
+
+
+            $this->get_symbol('(');
+            $expr = $this->get_expr();
+            $this->get_symbol(')');
+
+            $partitions = $this->get_reserved(array( 'PARTITIONS' ));
+            $num = $this->get_num();
+        }
         else if ( $this->cur()->token() == 'ROW_FORMAT' ) {
             $this->maybe( '=' );
             $this->get_reserved(array( 'DEFAULT', 'DYNAMIC', 'FIXED', 'COMPRESSED', 'REDUNDANT', 'COMPACT' ));
