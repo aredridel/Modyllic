@@ -1059,23 +1059,7 @@ class Modyllic_Parser {
         }
         else if ( $this->cur()->token() == 'PARTITION' ) {
             $this->get_reserved(array( 'BY' ));
-            $part_type = $this->get_reserved(array( 'LINEAR', 'HASH', 'LIST', 'RANGE', 'KEY' ));
-
-            if ( $part_type == 'LINEAR' ) {
-                $linear = true;
-                $part_type = $this->get_reserved(array( 'LIST', 'RANGE' ));
-            }
-            else {
-                $linear = false;
-            }
-
-
-            $this->get_symbol('(');
-            $expr = $this->get_expr();
-            $this->get_symbol(')');
-
-            $partitions = $this->get_reserved(array( 'PARTITIONS' ));
-            $num = $this->get_num();
+            $this->get_partition();
         }
         else if ( $this->cur()->token() == 'ROW_FORMAT' ) {
             $this->maybe( '=' );
@@ -1117,6 +1101,50 @@ class Modyllic_Parser {
             return false;
         }
         return true;
+    }
+
+    function get_partition() {
+        $part_type = $this->get_reserved(array( 'LINEAR', 'HASH', 'LIST', 'RANGE', 'KEY' ));
+
+        if ( $part_type == 'LINEAR' ) {
+            $linear = true;
+            $part_type = $this->get_reserved(array( 'HASH', 'KEY' ));
+        }
+        else {
+            $linear = false;
+        }
+
+
+        $this->get_symbol('(');
+        $expr = $this->get_expr();
+        $this->get_symbol(')');
+
+        if ($part_type == 'RANGE') {
+            $this->get_symbol('(');
+            $this->get_partition_range();
+            $this->get_symbol(')');
+        }
+        else if ($part_type == 'HASH') {
+            $partitions = $this->get_reserved(array( 'PARTITIONS' ));
+            $num = $this->get_num();
+        }
+    }
+
+    function get_partition_range() {
+        $this->get_reserved(array( 'PARTITION' ));
+        $this->get_ident();
+        $this->get_reserved(array( 'VALUES' ));
+        $this->get_reserved(array( 'LESS' ));
+        $this->get_reserved(array( 'THAN' ));
+        if (!$this->maybe(array( 'MAXVALUE' ))) {
+            $this->get_symbol('(');
+            $this->get_expr();
+            $this->get_symbol(')');
+        }
+
+        if ($this->maybe( ',' )) {
+            $this->get_partition_range();
+        }
     }
 
     function load_column() {
