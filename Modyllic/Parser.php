@@ -1124,7 +1124,18 @@ class Modyllic_Parser {
             $this->get_symbol(')');
 
             $this->get_symbol('(');
-            $this->get_partition_range();
+            do {
+                $this->get_reserved(array( 'PARTITION' ));
+                $this->get_ident();
+                $this->get_reserved(array( 'VALUES' ));
+                $this->get_reserved(array( 'LESS' ));
+                $this->get_reserved(array( 'THAN' ));
+                if (!$this->maybe(array( 'MAXVALUE' ))) {
+                    $this->get_symbol('(');
+                    $this->get_expr();
+                    $this->get_symbol(')');
+                }
+            } while ($this->maybe( ',' ));
             $this->get_symbol(')');
         }
         else if ($part_type == 'RANGE COLUMNS') {
@@ -1159,21 +1170,6 @@ class Modyllic_Parser {
             $partitions = $this->get_reserved(array( 'PARTITIONS' ));
             $num = $this->get_num();
         }
-    }
-
-    function get_partition_range() {
-        do {
-            $this->get_reserved(array( 'PARTITION' ));
-            $this->get_ident();
-            $this->get_reserved(array( 'VALUES' ));
-            $this->get_reserved(array( 'LESS' ));
-            $this->get_reserved(array( 'THAN' ));
-            if (!$this->maybe(array( 'MAXVALUE' ))) {
-                $this->get_symbol('(');
-                $this->get_expr();
-                $this->get_symbol(')');
-            }
-        } while ($this->maybe( ',' ));
     }
 
     function load_column() {
