@@ -1114,37 +1114,72 @@ class Modyllic_Parser {
             $linear = false;
         }
 
-
-        $this->get_symbol('(');
-        $expr = $this->get_expr();
-        $this->get_symbol(')');
+        if ($this->maybe( 'COLUMNS' )) {
+            $part_type = "$part_type COLUMNS";
+        }
 
         if ($part_type == 'RANGE') {
+            $this->get_symbol('(');
+            $expr = $this->get_expr();
+            $this->get_symbol(')');
+
             $this->get_symbol('(');
             $this->get_partition_range();
             $this->get_symbol(')');
         }
+        else if ($part_type == 'RANGE COLUMNS') {
+            $this->get_symbol( '(' );
+            do {
+                $this->get_ident();
+            } while ($this->maybe( ',' ));
+            $this->get_symbol( ')' );
+
+            do {
+                $this->get_symbol('(');
+                $this->get_partition_range_columns();
+                $this->get_symbol(')');
+            } while ($this->maybe( ',' ));
+        }
         else if ($part_type == 'HASH') {
+            $this->get_symbol('(');
+            $expr = $this->get_expr();
+            $this->get_symbol(')');
+
             $partitions = $this->get_reserved(array( 'PARTITIONS' ));
             $num = $this->get_num();
         }
     }
 
-    function get_partition_range() {
-        $this->get_reserved(array( 'PARTITION' ));
-        $this->get_ident();
-        $this->get_reserved(array( 'VALUES' ));
-        $this->get_reserved(array( 'LESS' ));
-        $this->get_reserved(array( 'THAN' ));
-        if (!$this->maybe(array( 'MAXVALUE' ))) {
+    function get_partition_range_columns() {
+        do {
+            $this->get_reserved(array( 'PARTITION' ));
+            $this->get_ident();
+            $this->get_reserved(array( 'VALUES' ));
+            $this->get_reserved(array( 'LESS' ));
+            $this->get_reserved(array( 'THAN' ));
             $this->get_symbol('(');
-            $this->get_expr();
+            do {
+                if (!$this->maybe(array( 'MAXVALUE' ))) {
+                    $this->get_expr();
+                }
+            } while ($this->maybe( ',' ));
             $this->get_symbol(')');
-        }
+        } while ($this->maybe( ',' ));
+    }
 
-        if ($this->maybe( ',' )) {
-            $this->get_partition_range();
-        }
+    function get_partition_range() {
+        do {
+            $this->get_reserved(array( 'PARTITION' ));
+            $this->get_ident();
+            $this->get_reserved(array( 'VALUES' ));
+            $this->get_reserved(array( 'LESS' ));
+            $this->get_reserved(array( 'THAN' ));
+            if (!$this->maybe(array( 'MAXVALUE' ))) {
+                $this->get_symbol('(');
+                $this->get_expr();
+                $this->get_symbol(')');
+            }
+        } while ($this->maybe( ',' ));
     }
 
     function load_column() {
