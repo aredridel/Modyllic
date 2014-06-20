@@ -1114,7 +1114,7 @@ class Modyllic_Parser {
             $linear = false;
         }
 
-        if ($this->maybe( 'COLUMNS' )) {
+        if ( $part_type == 'RANGE' || $part_type == 'LIST' and $this->maybe( 'COLUMNS' )) {
             $part_type = "$part_type COLUMNS";
         }
 
@@ -1134,11 +1134,22 @@ class Modyllic_Parser {
             } while ($this->maybe( ',' ));
             $this->get_symbol( ')' );
 
+            $this->get_symbol('(');
             do {
+                $this->get_reserved(array( 'PARTITION' ));
+                $this->get_ident();
+                $this->get_reserved(array( 'VALUES' ));
+                $this->get_reserved(array( 'LESS' ));
+                $this->get_reserved(array( 'THAN' ));
                 $this->get_symbol('(');
-                $this->get_partition_range_columns();
+                do {
+                    if (!$this->maybe(array( 'MAXVALUE' ))) {
+                        $this->get_expr();
+                    }
+                } while ($this->maybe( ',' ));
                 $this->get_symbol(')');
             } while ($this->maybe( ',' ));
+            $this->get_symbol(')');
         }
         else if ($part_type == 'HASH') {
             $this->get_symbol('(');
@@ -1148,23 +1159,6 @@ class Modyllic_Parser {
             $partitions = $this->get_reserved(array( 'PARTITIONS' ));
             $num = $this->get_num();
         }
-    }
-
-    function get_partition_range_columns() {
-        do {
-            $this->get_reserved(array( 'PARTITION' ));
-            $this->get_ident();
-            $this->get_reserved(array( 'VALUES' ));
-            $this->get_reserved(array( 'LESS' ));
-            $this->get_reserved(array( 'THAN' ));
-            $this->get_symbol('(');
-            do {
-                if (!$this->maybe(array( 'MAXVALUE' ))) {
-                    $this->get_expr();
-                }
-            } while ($this->maybe( ',' ));
-            $this->get_symbol(')');
-        } while ($this->maybe( ',' ));
     }
 
     function get_partition_range() {
