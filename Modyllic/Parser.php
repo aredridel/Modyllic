@@ -1162,6 +1162,25 @@ class Modyllic_Parser {
             } while ($this->maybe( ',' ));
             $this->get_symbol(')');
         }
+        else if ( $part_type == 'LIST' ) {
+            $this->get_symbol( '(' );
+            $expr = $this->get_expr();
+            $this->get_symbol( ')' );
+
+            $this->get_symbol( '(' );
+            do {
+                $this->get_reserved(array( 'PARTITION' ));
+                $this->get_ident();
+                $this->get_reserved(array( 'VALUES' ));
+                $this->get_reserved(array( 'IN' ));
+                $this->get_symbol('(');
+                do {
+                    $this->get_expr();
+                } while ($this->maybe( ',' ));
+                $this->get_symbol(')');
+            } while ($this->maybe( ',' ));
+            $this->get_symbol( ')' );
+        }
         else if ($part_type == 'HASH') {
             $this->get_symbol('(');
             $expr = $this->get_expr();
