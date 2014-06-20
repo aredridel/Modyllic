@@ -1189,6 +1189,14 @@ class Modyllic_Parser {
             $partitions = $this->get_reserved(array( 'PARTITIONS' ));
             $num = $this->get_num();
         }
+        else if ($part_type == 'KEY') {
+            $this->get_symbol( '(' );
+            $this->maybe_ident(); 
+            $this->get_symbol( ')' );
+
+            $partitions = $this->get_reserved(array( 'PARTITIONS' ));
+            $num = $this->get_num();
+        }
     }
 
     function load_column() {
